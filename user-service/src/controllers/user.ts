@@ -173,7 +173,7 @@ export const postAuthentication = async (req: Request, res: any, next: any) => {
 
   // Fetch the user
   const user = await User.findOne(
-    { id_token: idToken },
+    { idToken: idToken },
     { password: 0, idToken: 0 }
   );
 
@@ -181,4 +181,8 @@ export const postAuthentication = async (req: Request, res: any, next: any) => {
 
   req.user = user;
   next();
+};
+
+export const getUserData = async (req: Request, res: any) => {
+  return res.respond(req.user);
 };

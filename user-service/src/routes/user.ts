@@ -5,6 +5,7 @@ import {
   createUser,
   getAccountAvailability,
   getNewTokens,
+  getUserData,
   postAuthentication,
 } from "../controllers/user";
 
@@ -20,5 +21,6 @@ router.use(checkJwt);
 // Protected routes
 router.get("/token", getNewTokens);
 router.use(postAuthentication);
+router.get("/", getUserData);
 
 export default router;
