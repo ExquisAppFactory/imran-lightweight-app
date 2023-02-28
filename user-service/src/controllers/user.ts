@@ -7,6 +7,7 @@ import { hashString } from "../util/utils";
 import { validateRequest } from "../util/validation";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { PendingVerification } from "../models/pending_verification";
 
 export const checkJwt = expressjwt({
   secret: process.env.TOKEN_SECRET as string,
@@ -185,4 +186,84 @@ export const postAuthentication = async (req: Request, res: any, next: any) => {
 
 export const getUserData = async (req: Request, res: any) => {
   return res.respond(req.user);
+};
+
+export const initiatePasswordReset = async (
+  req: Request,
+  res: any,
+  next: any
+) => {
+  const handler = async () => {
+    await withTransaction(next, async (session) => {
+      const user = await User.findOne({ email: req.body.email });
+      if (!user)
+        return res.failNotFound(
+          "This email is not registered.",
+          "email-not-found"
+        );
+
+      // TODO: implement this; this should invoke the notification service
+      const dispatchEmail = (verificationCode: string) => {
+        res.respond(null, 200, "Verification code sent");
+      };
+
+      // Find any existing verification data
+      const verification = await PendingVerification.findOne({
+        user: user._id,
+        verificationType: "PASSWORD_RESET",
+      });
+
+      if (verification) return dispatchEmail(verification.verificationCode);
+
+      // Create new verification data
+      await withTransaction(next, async () => {
+        const verification = new PendingVerification({
+          verificationType: "PASSWORD_RESET",
+          verificationCode: randomString({ length: 4, letters: false }),
+          user: user._id,
+        });
+        await verification.save({ session });
+
+        dispatchEmail(verification.verificationCode);
+      });
+    });
+  };
+
+  validateRequest(req, res, validationRules.initiatePasswordReset, handler);
+};
+
+export const finalizePasswordReset = async (
+  req: Request,
+  res: any,
+  next: any
+) => {
+  const handler = async () => {
+    await withTransaction(next, async (session) => {
+      const body = req.body;
+
+      // Fetch the verification data
+      const verification = await PendingVerification.findOne({
+        verificationCode: body.verificationCode,
+        verificationType: "PASSWORD_RESET",
+      }).populate("user");
+      if (!verification)
+        return res.failValidationError(
+          ["Invalid verification code"],
+          "verification-code-not-found"
+        );
+
+      // Update password
+      verification.user.password = await hashString(body.newPassword);
+      await verification.user.save({ session });
+
+      // Remove the verification data
+      await PendingVerification.deleteOne({
+        verificationCode: body.verificationCode,
+      }).session(session);
+
+      return res.respond(null, 200, "Password updated");
+    });
+  };
+
+  validateRequest(req, res, validationRules.finalizePasswordReset, handler);
 };

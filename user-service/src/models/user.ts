@@ -45,13 +45,20 @@ export const validationRules = {
   }),
   update: joi.object({
     email: joi.string().email().max(50),
-    full_name: joi.string().max(100),
-    phone: joi.string().min(11).max(15),
-    current_password: joi.string(),
+    fullName: joi.string().max(100),
+    currentPassword: joi.string(),
     password: joi.string().min(6),
-    confirm_password: joi.string().valid(joi.ref("password")),
+    confirmPassword: joi.string().valid(joi.ref("password")),
     gender: joi.string().valid("Male", "Female"),
+  }),
+  initiatePasswordReset: joi.object({
+    email: joi.string().email().max(50).required(),
+  }),
+  finalizePasswordReset: joi.object({
+    newPassword: joi.string().min(6).required(),
+    confirmPassword: joi.string().required().valid(joi.ref("newPassword")),
+    verificationCode: joi.string().required(),
   }),
 };
 
-export const User = model<IUser>("user", schema);
+export const User = model<IUser>("User", schema);
