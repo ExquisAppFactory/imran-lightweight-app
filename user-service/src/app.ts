@@ -1,11 +1,12 @@
-import express from "express";
 import dotenv from "dotenv";
+// Load env variables
+dotenv.config();
+
+import express from "express";
 import mongoose from "mongoose";
 import { UnauthorizedError } from "express-jwt";
 import responseHelper from "express-response-helper";
-
-// Load env variables
-dotenv.config();
+import userRoutes from "./routes/user";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(responseHelper.helper());
 app.get("/", (_req, res) => {
   res.send("User Service API");
 });
+app.use("/user", userRoutes);
 
 // Error handler
 app.use((err: any, _req: any, res: any, _next: any) => {
