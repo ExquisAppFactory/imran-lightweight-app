@@ -267,3 +267,42 @@ export const finalizePasswordReset = async (
 
   validateRequest(req, res, validationRules.finalizePasswordReset, handler);
 };
+
+export const updateUser = async (req: Request, res: any, next: any) => {
+  const handler = async () => {
+    await withTransaction(next, async (session) => {
+      const body = req.body;
+      const updatableFields = ["fullName", "gender", "password"];
+      const fields = Object.keys(body);
+      const updatedFields = updatableFields.filter(
+        (field) => fields.indexOf(field) !== -1
+      );
+
+      const user = req.user;
+      updatedFields.forEach((field) => (user[field] = body[field]));
+
+      if (updatedFields.indexOf("password") !== -1) {
+        if (!body.currentPassword) {
+          return res.failValidationError(
+            ["Current password is required!"],
+            "no-current-password"
+          );
+        }
+
+        const tempUser = await User.findOne({ email: user.email });
+        if (!(await bcrypt.compare(body.currentPassword, tempUser!.password)))
+          return res.failValidationError(
+            ["Invalid current password!"],
+            "invalid-current-password"
+          );
+
+        user.password = await hashString(body.password);
+      }
+
+      await user.save({ session });
+      res.respond(user);
+    });
+  };
+
+  validateRequest(req, res, validationRules.update, handler);
+};

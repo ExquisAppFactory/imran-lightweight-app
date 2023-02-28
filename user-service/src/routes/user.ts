@@ -9,6 +9,7 @@ import {
   getUserData,
   initiatePasswordReset,
   postAuthentication,
+  updateUser,
 } from "../controllers/user";
 
 const router = Router();
@@ -26,5 +27,6 @@ router.use(checkJwt);
 router.get("/token", getNewTokens);
 router.use(postAuthentication);
 router.get("/", getUserData);
+router.put("/", updateUser);
 
 export default router;
