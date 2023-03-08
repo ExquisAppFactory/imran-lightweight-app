@@ -10,6 +10,9 @@ services:
       - "3000:80"
     environment:
       - PORT=80
+      - RABBITMQ_SERVER=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      - rabbitmq
     restart: "no"
 
   wallet-service:

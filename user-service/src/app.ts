@@ -7,9 +7,14 @@ import mongoose from "mongoose";
 import { UnauthorizedError } from "express-jwt";
 import responseHelper from "express-response-helper";
 import morgan from "morgan";
+import amqp from "amqplib";
+
 import userRoutes from "./routes/user";
+import { RabbitMQHelper } from "./util/rabbitmq";
 
 const app = express();
+const RABBITMQ_SERVER = process.env.RABBITMQ_SERVER!;
+const DATABASE_URL = process.env.DATABASE_URL as string;
 
 // Set up middleware
 app.use(express.json());
@@ -34,17 +39,23 @@ app.use((err: any, _req: any, res: any, _next: any) => {
   return res.failServerError();
 });
 
+const connectRabbitMQ = () => {
+  return amqp.connect(RABBITMQ_SERVER).then((connection) => {
+    return connection.createChannel();
+  });
+};
+
 // Connect to the database
-const DATABASE_URL = process.env.DATABASE_URL as string;
 mongoose
   .connect(DATABASE_URL)
-  .then(() => {
+  .then(async () => {
+    // Connect to rabbitmq
+    RabbitMQHelper.messageChannel = await connectRabbitMQ();
+
     // Start up the server
     const PORT = parseInt(process.env.PORT || "3000");
     app.listen(PORT, () => {
       console.log(`User Service started`);
     });
   })
-  .catch((err) =>
-    console.log(`User Service failed to connect to the database: ${err}`)
-  );
+  .catch((err) => console.log(`User Service failed start: ${err}`));

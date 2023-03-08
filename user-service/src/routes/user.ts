@@ -9,12 +9,14 @@ import {
   getUserData,
   initiatePasswordReset,
   postAuthentication,
+  testNotification,
   updateUser,
 } from "../controllers/user";
 
 const router = Router();
 
 router.post("/", createUser);
+router.post("/notification", testNotification);
 router.post("/availability", getAccountAvailability);
 router.get("/authenticate", authenticateUser);
 router.post("/password_reset/init", initiatePasswordReset);

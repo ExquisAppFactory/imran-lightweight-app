@@ -8,6 +8,7 @@ import { validateRequest } from "../util/validation";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { PendingVerification } from "../models/pending_verification";
+import { RabbitMQHelper } from "../util/rabbitmq";
 
 export const checkJwt = expressjwt({
   secret: process.env.TOKEN_SECRET as string,
@@ -305,4 +306,11 @@ export const updateUser = async (req: Request, res: any, next: any) => {
   };
 
   validateRequest(req, res, validationRules.update, handler);
+};
+
+export const testNotification = async (req: Request, res: any) => {
+  const body = req.body || {};
+  RabbitMQHelper.publishMessage("notifications", body);
+
+  res.respond("Message published");
 };
