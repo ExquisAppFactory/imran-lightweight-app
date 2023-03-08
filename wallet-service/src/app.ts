@@ -4,9 +4,8 @@ dotenv.config();
 
 import express from "express";
 import mongoose from "mongoose";
-import { UnauthorizedError } from "express-jwt";
 import responseHelper from "express-response-helper";
-import userRoutes from "./routes/user";
+import walletRoutes from "./routes/wallet";
 
 const app = express();
 
@@ -16,18 +15,13 @@ app.use(responseHelper.helper());
 
 // Set up routes
 app.get("/", (_req, res) => {
-  res.send("User Service API");
+  res.send("Wallet Service API");
 });
-app.use("/user", userRoutes);
+app.use("/wallet", walletRoutes);
 
 // Error handler
 app.use((err: any, _req: any, res: any, _next: any) => {
   console.log(err);
-
-  if (err instanceof UnauthorizedError) {
-    const unauthorized = err as UnauthorizedError;
-    return res.failUnauthorized(unauthorized.message, "unauthorized");
-  }
 
   return res.failServerError();
 });
@@ -36,10 +30,10 @@ app.use((err: any, _req: any, res: any, _next: any) => {
 const DATABASE_URL = process.env.DATABASE_URL as string;
 mongoose
   .connect(DATABASE_URL)
-  .catch(() => console.log("User Service failed to connect to the database"));
+  .catch(() => console.log("Wallet Service failed to connect to the database"));
 
 // Start up the server
-const PORT = parseInt(process.env.PORT || "3000");
+const PORT = parseInt(process.env.PORT || "3001");
 app.listen(PORT, () => {
-  console.log(`User Service listening on port ${PORT}`);
+  console.log(`Wallet Service listening on port ${PORT}`);
 });
