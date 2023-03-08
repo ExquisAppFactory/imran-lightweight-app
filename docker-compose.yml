@@ -23,3 +23,14 @@ services:
     environment:
       - PORT=80
     restart: "no"
+
+  rabbitmq:
+    image: rabbitmq:3.8.1-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    expose:
+      - "5672"
+      - "15672"
+    restart: "always"
