@@ -2,43 +2,25 @@ import dotenv from "dotenv";
 // Load env variables
 dotenv.config();
 
-import express from "express";
-import mongoose from "mongoose";
-import responseHelper from "express-response-helper";
-import morgan from "morgan";
-import walletRoutes from "./routes/wallet";
+import amqp from "amqplib";
 
-const app = express();
+const RABBITMQ_SERVER = process.env.RABBITMQ_SERVER!;
 
-// Set up middleware
-app.use(express.json());
-app.use(responseHelper.helper());
-app.use(morgan("combined"));
+const connectRabbitMQ = () => {
+  return amqp.connect(RABBITMQ_SERVER).then((connection) => {
+    return connection.createChannel();
+  });
+};
 
-// Set up routes
-app.get("/", (_req, res) => {
-  res.send("Wallet Service API");
-});
-app.use("/wallet", walletRoutes);
+const run = () => {
+  return connectRabbitMQ().then((messageChannel) => {
+    console.log("Message channel created");
+  });
+};
 
-// Error handler
-app.use((err: any, _req: any, res: any, _next: any) => {
-  console.log(err);
-
-  return res.failServerError();
-});
-
-// Connect to the database
-const DATABASE_URL = process.env.DATABASE_URL as string;
-mongoose
-  .connect(DATABASE_URL)
-  .then(() => {
-    // Start up the server
-    const PORT = parseInt(process.env.PORT || "3001");
-    app.listen(PORT, () => {
-      console.log(`Wallet Service started`);
-    });
-  })
-  .catch((err) =>
-    console.log(`Wallet Service failed to connect to the database: ${err}`)
-  );
+run()
+  .then(() => console.log("Notification service started"))
+  .catch((err) => {
+    console.error("Notification service failed to start.");
+    console.error((err && err.stack) || err);
+  });

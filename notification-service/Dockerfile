@@ -9,4 +9,5 @@ RUN npm install
 
 COPY ./src ./src
 
-CMD npm run dev
+CMD npx wait-port rabbitmq:5672 && \
+    npm run dev
