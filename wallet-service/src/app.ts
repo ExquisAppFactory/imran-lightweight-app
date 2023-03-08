@@ -4,10 +4,9 @@ dotenv.config();
 
 import express from "express";
 import mongoose from "mongoose";
-import { UnauthorizedError } from "express-jwt";
 import responseHelper from "express-response-helper";
 import morgan from "morgan";
-import userRoutes from "./routes/user";
+import walletRoutes from "./routes/wallet";
 
 const app = express();
 
@@ -18,18 +17,13 @@ app.use(morgan("combined"));
 
 // Set up routes
 app.get("/", (_req, res) => {
-  res.send("User Service API");
+  res.send("Wallet Service API");
 });
-app.use("/user", userRoutes);
+app.use("/wallet", walletRoutes);
 
 // Error handler
 app.use((err: any, _req: any, res: any, _next: any) => {
   console.log(err);
-
-  if (err instanceof UnauthorizedError) {
-    const unauthorized = err as UnauthorizedError;
-    return res.failUnauthorized(unauthorized.message, "unauthorized");
-  }
 
   return res.failServerError();
 });
@@ -40,11 +34,11 @@ mongoose
   .connect(DATABASE_URL)
   .then(() => {
     // Start up the server
-    const PORT = parseInt(process.env.PORT || "3000");
+    const PORT = parseInt(process.env.PORT || "3001");
     app.listen(PORT, () => {
-      console.log(`User Service started`);
+      console.log(`Wallet Service started`);
     });
   })
   .catch((err) =>
-    console.log(`User Service failed to connect to the database: ${err}`)
+    console.log(`Wallet Service failed to connect to the database: ${err}`)
   );

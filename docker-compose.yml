@@ -1,0 +1,25 @@
+version: "3"
+services:
+  user-service:
+    image: user-service
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "3000:80"
+    environment:
+      - PORT=80
+    restart: "no"
+
+  wallet-service:
+    image: wallet-service
+    build:
+      context: ./wallet-service
+      dockerfile: Dockerfile
+    container_name: wallet-service
+    ports:
+      - "3001:80"
+    environment:
+      - PORT=80
+    restart: "no"
