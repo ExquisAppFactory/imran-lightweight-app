@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import amqp, { Channel, ConsumeMessage } from "amqplib";
+import { Email } from "./lib/email";
+import { NotificationBody } from "./lib/types";
 
 const RABBITMQ_SERVER = process.env.RABBITMQ_SERVER!;
 
@@ -13,11 +15,20 @@ const connectRabbitMQ = () => {
 };
 
 const setupHandlers = (messageChannel: Channel) => {
-  const consumeNotificationMessage = (message: ConsumeMessage | null) => {
+  const email = new Email();
+
+  const consumeNotificationMessage = async (message: ConsumeMessage | null) => {
     if (!message) return;
 
-    const parsedMsg = JSON.parse(message.content.toString());
-    console.log(`Notification service consumed: ${JSON.stringify(parsedMsg)}`);
+    try {
+      const parsedMsg = JSON.parse(
+        message.content.toString()
+      ) as NotificationBody;
+
+      await email.sendMail(parsedMsg.to, parsedMsg.subject, parsedMsg.body);
+    } catch (err) {
+      console.log(`Failed to dispatch notification: ${err}`);
+    }
   };
 
   return messageChannel.assertQueue("notifications", {}).then(() => {
